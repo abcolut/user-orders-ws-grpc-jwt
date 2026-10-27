@@ -1,0 +1,15 @@
+.env
+my_api.db
+air.exe
+dlv.exe
+grpcui.exe
+_plan.txt
+my_api/proto
+*_old.go
+go.mod
+go.sum
+*.pb.go
+
+
+*.exe
+tmp/*

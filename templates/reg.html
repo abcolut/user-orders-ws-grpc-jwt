@@ -1,0 +1,126 @@
+
+<h3 align="center">Регистрация пользователя</h3>
+
+<div class="row">
+    Пример работы с post, роутами. Получение jwt token. Работа с файлами (вывод на экран заранее подготовленного
+    html файла). Работа с валидаторами, ошибками сервера.
+</div>
+
+<div>
+    <div class="row" id="tokenName">
+        <label>Имя: </label><input name="name" placeholder="name" value="Name">
+    </div>
+    <div class="row" id="tokenEmail">
+        <label>Емайл: </label><input name="email" placeholder="email" value="email@email.email">
+    </div>
+    <div class="row" id="tokenPassword">
+        <label>Пароль: </label><input name="password" placeholder="password" value="Password12345" type="password">
+    </div>
+    <div class="row" id="tokenPassword2">
+        <label>Пароль: </label><input name="password2" placeholder="password2" value="Password12345" type="password">
+    </div>
+</div>
+<div>
+    <div class="row"><button onclick="regUser()">Регистрация пользователя</button></div>
+    <div id="answer" class="row center goodAnswer"></div>
+    <div id="status" class="row center"></div>
+    <!-- <div id="token" class="row center goodAnswer"></div> -->
+    <div id="error" class="row center errorAnswer"></div>
+
+
+</div>
+
+
+
+<script>
+    // let token
+    let divAnswer
+    let divError
+    let divStatus
+
+    function regUser() {
+        if (divAnswer) { divAnswer.innerHTML = "" }
+        if (divStatus) { divStatus.innerHTML = "" }
+        // if (divAnswer2) { divAnswer2.innerHTML = "" }
+        if (divError) { divError.innerHTML = "" }
+        // if (divError2) { divError2.innerHTML = "" }
+
+        const formData = {
+            username: document.querySelector('input[name="name"]').value,
+            email: document.querySelector('input[name="email"]').value,
+            password: document.querySelector('input[name="password"]').value,
+            // password2: document.querySelector('input[name="password2"]').value
+        };
+
+        fetch('/api/reg', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', }, body: JSON.stringify(formData),
+        })
+            .then((res) => {
+                if (divStatus && res.status) { divStatus.innerHTML = res.status }
+                // if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json(); // сам распарсит JSON
+            })
+            .then((data) => {
+
+                if (divAnswer && data.data) { divAnswer.innerHTML = JSON.stringify(data.data) }
+                // token = data.data.token
+                if (divError && data.error) { divError.innerHTML = JSON.stringify(data.error) }
+
+                if (divError && data.error) { divError.innerHTML = JSON.stringify(data.error) }
+
+            })
+            .catch((err) => {
+                console.error('Запрос не выполнен:', err);
+                divAnswer.innerHTML = err
+            });
+    }
+
+    // function resetToken() {
+    //     token = ""
+    //     if (divAnswer) { divAnswer.innerHTML = "" }
+    //     if (divToken) { divToken.innerHTML = "" }
+    //     if (divAnswer2) { divAnswer2.innerHTML = "" }
+    //     if (divError) { divError.innerHTML = "" }
+    //     if (divError2) { divError2.innerHTML = "" }
+    // }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        divAnswer = document.getElementById("answer")
+        divError = document.getElementById("error")
+        divStatus = document.getElementById("status")
+        // divAnswer2 = document.getElementById("answer2")
+        // divError2 = document.getElementById("error2")
+    });
+
+
+</script>
+
+<style>
+    input,
+    button {
+        margin: 3px;
+        padding: 3px;
+        border-radius: 5px;
+    }
+
+    .row {
+        margin: 10px;
+    }
+
+    .center {
+        text-align: center;
+    }
+
+    .errorAnswer {
+        color: brown;
+    }
+
+    .goodAnswer {
+        color: green;
+    }
+
+    label {
+        display: inline-block;
+        width: 80px;
+    }
+</style>

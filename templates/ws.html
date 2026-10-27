@@ -1,0 +1,146 @@
+<h4 align="center"> Web Soket </h4>
+<div class="row"><a href="/">index</a></div>
+
+<div class="row"> Веб сокет ловит изменения статусов заказов текущего пользователя. Работает через порт
+    ws://localhost:8080/api/. </div>
+<div>Откройте второе окно с /orders. Измените статус заказа и вы получите сигнал в этом окне</div>
+<hr>
+
+<div id="divMessages" class="row center errorAnswer">messages</div>
+
+<div class="row grey">ToDo: передавать токен на бэк и по бэку определять UserId</div>
+
+
+<script>
+    var ar = [];
+    var userId
+
+    let ws
+
+    // function initWsOld() {
+    //     ws = new WebSocket('ws://localhost:8080/api/ws?user_id=' + userId);
+    //     ws.onopen = () => { addMessageToArchive('✅ WS: соединение установлено'); }
+    //     ws.onerror = (err) => { addMessageToArchive('❌ WS: ошибка ' + err); }
+    //     ws.onclose = () => { addMessageToArchive('🔌 WS: соединение закрыто'); }
+    // }
+
+
+    function createReconnectingSocket(url, onMessage, onOpen) {
+        let retryCount = 0;
+        const maxRetries = 20;
+
+        function connect() {
+            const ws = new WebSocket(url);
+
+            ws.onopen = () => {
+                retryCount = 0;
+                if (onOpen) onOpen(ws);
+            };
+
+            ws.onmessage = (event) => onMessage(event);
+
+            ws.onclose = (event) => {
+                if (event.code === 1000) return; // нормальное закрытие — не надо переподключаться
+
+                retryCount++;
+                if (retryCount > maxRetries) {
+                    console.warn('Слишком много попыток переподключения, сдаёмся');
+                    return;
+                }
+                const delay = Math.min(1000 * Math.pow(2, retryCount - 1), 30000);
+                console.log(`Соединение потеряно, пробуем через ${delay / 1000} сек…`);
+                setTimeout(connect, delay);
+            };
+
+            ws.onerror = (err) => console.error('WS error', err);
+        }
+        connect();
+    }
+
+
+    function addMessageToArchive(data) {
+        ar.push(data);
+        // console.log(data);
+        s = ar.join("<br>")
+        divMessages = document.getElementById("divMessages")
+        if (divMessages) { divMessages.innerHTML = s }
+    }
+
+
+    function onMessage(event) {
+        // console.log("onMessage", event.data)
+        addMessageToArchive(event.data)
+    }
+
+    function onOpen() {
+        addMessageToArchive("WS chanel open!!!")
+    }
+
+    // var user_id
+
+    document.addEventListener('DOMContentLoaded', () => {
+        divMessages = document.getElementById("divMessages")
+        userId = getUserId()
+        console.log("userId", userId)
+        if (divMessages) { divMessages.innerHTML = "User ID:" + userId }
+        createReconnectingSocket('ws://localhost:8080/api/ws?user_id=' + userId, onMessage, onOpen)
+    });
+
+
+    function parseJwt(token) {
+        try {
+            const payloadB64 = token.split('.')[1];
+            const payloadJson = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'));
+            return JSON.parse(payloadJson);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function getUserId() {
+        const token = localStorage.getItem('jwt_token');
+        console.log("token", token)
+        if (!token) return null;
+
+        const payload = parseJwt(token);
+        console.log(payload)
+        return payload?.sub || payload?.user_id || null;
+    }
+
+
+</script>
+
+
+<style>
+    input,
+    button {
+        margin: 3px;
+        padding: 3px;
+        border-radius: 5px;
+    }
+
+    .row {
+        margin: 10px;
+    }
+
+    .center {
+        text-align: center;
+    }
+
+    .error {
+        color: brown;
+    }
+
+    .grey {
+        color: grey;
+    }
+
+    .goodAnswer {
+        color: green;
+    }
+
+    label {
+        display: inline-block;
+        width: 80px;
+    }
+</style>

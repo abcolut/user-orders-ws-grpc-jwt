@@ -1,0 +1,89 @@
+<hr>
+<h4 class="row">Footer section </h4>
+<div id="userInfo" class="userInfo row">UserInfo </div>
+
+<div class="row">
+    <div class="row"><a href="/">index</a></div>
+    <div class="row"><a href="/reg">Регистрация</a></div>
+    <div class="row"><a href="/auth">Авторизация</a></div>
+    <div class="row"><a href="/orders">Работа с таблицей заказов</a> </div>
+    <div class="row"><a href="/ws_html">Web Soket</a></div>
+</div>
+
+<script>
+    var token
+    var userId
+    var divUserInfo
+
+    divUserId = document.getElementById("userInfo")
+    if (userInfo) userInfo.innerHTML = "userInfo:" + getUserId() + " <br>token:" + token
+
+
+    function parseJwt(token) {
+        try {
+            const payloadB64 = token.split('.')[1];
+            const payloadJson = atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'));
+            return JSON.parse(payloadJson);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function getUserId() {
+        token = localStorage.getItem('jwt_token');
+        if (!token) return null;
+
+        const payload = parseJwt(token);
+        return payload?.sub || payload?.user_id || null;
+    }
+
+
+    function resetToken() {
+        token = ""
+        localStorage.setItem('jwt_token', "");
+        // if (divAnswer) { divAnswer.innerHTML = "" }
+        // if (divToken) { divToken.innerHTML = "" }
+        // if (divResponceStatus) { divResponceStatus.innerHTML = "" }
+        // if (divAnswer2) { divAnswer2.innerHTML = "" }
+        // if (divError) { divError.innerHTML = "" }
+        // if (divError2) { divError2.innerHTML = "" }
+    }
+
+
+</script>
+
+
+
+<style>
+    input,
+    button {
+        margin: 3px;
+        padding: 3px;
+        border-radius: 5px;
+    }
+
+    .row {
+        margin: 10px;
+    }
+
+    .center {
+        text-align: center;
+    }
+
+    .error {
+        color: brown;
+    }
+
+    .goodAnswer {
+        color: green;
+    }
+
+    label {
+        display: inline-block;
+        width: 80px;
+    }
+
+    .grey {
+        color: grey;
+    }
+</style>

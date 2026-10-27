@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option go_package = "my_api/proto;proto";
+
+package order;
+
+message Order {
+  int64 id = 1;                 // в БД обычно int, в proto для совместимости лучше int64
+  int32 user_id = 2;             // кто создал заказ
+  string status = 3;             // например: "new", "in_progress", "rejected"
+  string item = 4;               // что заказали (можно оставить)
+  int32 quantity = 5;           // сколько
+  string customer = 6;           // имя клиента (если нужно отдельно от user_id)
+  string created_at = 7;        // дата в формате RFC3339 (строка — проще для proto)
+}
+
+message ListOrdersRequest {
+  int32 user_id = 1;             // фильтр по пользователю
+}
+
+message ListOrdersResponse {
+  repeated Order orders = 1;
+}
+
+service OrderService {
+  rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse);
+  rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (Order);
+}
+
+message UpdateOrderStatusRequest {
+  int64 order_id = 1;
+  string new_status = 2;
+  int32 user_id = 3;             // проверка прав: можно менять только свои заказы
+}
+
+// protoc --go_out=. --go-grpc_out=. proto/order.proto
+
+//.\protoc --go_out=. --go_opt=paths=source_relative  --go-grpc_out=. --go-grpc_opt=require_unimplemented_servers=true  proto/order.proto
+
+
+
+// protoc --go_out=. --go_opt=paths=source_relative  --go-grpc_out=. --go-grpc_opt=require_unimplemented_servers=true        proto/order.proto
+// protoc --go_out=. --go-grpc_out=. proto/order.proto
+// protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=require_unimplemented_servers=true proto/order.proto

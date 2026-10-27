@@ -1,0 +1,209 @@
+<h3 align="center">Работа с Заказами (БД)</h3>
+
+<div id="answer" class="row ">
+    Работа с таблицей заказов
+    <ul>
+        <li>Добавление, редактирование, список заказов. </li>
+        <li>Отработака ошибок, </li>
+        <li>Типизация ответа.</li>
+        <li>Регистрация единого подключения к базе данных и общего валидатора</li>
+    </ul>
+</div>
+
+<div>
+
+    <div class="row" id="dbAction">
+        <label>action:</label>
+        <select name="actionSelect" id="actionSelect" onchange="onCnangeSelect()">
+            <option value="add">Добавить заказ</option>
+            <option value="getById">Показать заказ</option>
+            <option value="changeStatus">Поменять статус</option>
+            <option value="list">Список последних заказов</option>
+        </select>
+
+    </div>
+
+    <div class="row" id="dbStatus">
+        <label>Статус:</label> <input name="status" placeholder="status" value="reject">
+    </div>
+    <div class="row" id="dbId">
+        <label>id:</label> <input name="id" placeholder="id" value=1 type="number">
+    </div>
+    <div class="row" id="dbCustomer">
+        <label>Покупатель:</label> <input name="customer" placeholder="customer" value="">
+    </div>
+    <div class="row" id="dbItem">
+        <label>Товар:</label> <input name="item" placeholder="item" value="item">
+    </div>
+    <div class="row" id="dbQuantity">
+        <label>Количество:</label> <input name="quantity" placeholder="quantity" value=4 type="number">
+    </div>
+
+</div>
+
+<div class="row"><button onclick="orderAction()">Запрос в БД</button></div>
+
+<div id="responceStatus" class="row center"></div>
+<div id="answerDb" class="row center goodAnswer"></div>
+<div id="errorDb" class="row center errorAnswer"></div>
+
+<div class="row"><button onclick="resetToken()">Обнулить token</button></div>
+<div id="user_id" class="row center grey"></div>
+<!-- <div id="token" class="row token"></div> -->
+
+<iframe src="http://localhost:8080/ws_html" width="100%" height="300px"></iframe>
+
+
+<script>
+    var divResponceStatus
+    var divDbStatus
+    var divDbId
+    var divDbCustomer
+    var divDbItem
+    var divDbQuantity
+    // let divToken
+
+    var token
+
+
+    function orderAction() {
+        if (divAnswerDb) { divAnswerDb.innerHTML = "" }
+        if (divErrorDb) { divErrorDb.innerHTML = "" }
+
+        const formData = {
+            id: Number(document.querySelector('input[name="id"]').value),
+            customer: document.querySelector('input[name="customer"]').value,
+            item: document.querySelector('input[name="item"]').value,
+            quantity: Number(document.querySelector('input[name="quantity"]').value),
+            status: document.querySelector('input[name="status"]').value,
+            action: document.getElementById('actionSelect').value,
+        };
+        // console.log(formData)
+
+        fetch('/api/orders', {
+            method: 'POST',
+            // headers: { 'Content-Type': 'application/json', },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(formData),
+        })
+            .then((res) => {
+                if (divResponceStatus) { divResponceStatus.innerHTML = res.status }
+                return res.json();
+            })
+            .then((data) => {
+                if (divAnswerDb && data.data) { divAnswerDb.innerHTML = JSON.stringify(data.data) }
+                if (divErrorDb && data.error) { divErrorDb.innerHTML = JSON.stringify(data.error) }
+            })
+            .catch((err) => {
+                console.error('Запрос не выполнен:', err);
+                if (divAnswerDb) { divAnswerDb.innerHTML = "<span class='error'>" + err + "</span>" }
+            });
+    }
+
+
+    function onCnangeSelect() {
+        const action = document.getElementById('actionSelect').value
+        // console.log(action)
+        if (action === "add") {
+            divDbStatus.style.display = 'none'
+            divDbId.style.display = 'none'
+            divDbCustomer.style.display = 'block'
+            divDbItem.style.display = 'block'
+            divDbQuantity.style.display = 'block'
+        }
+        if (action === "list") {
+            divDbStatus.style.display = 'none'
+            divDbId.style.display = 'none'
+            divDbCustomer.style.display = 'none'
+            divDbItem.style.display = 'none'
+            divDbQuantity.style.display = 'none'
+        }
+        if (action === "getById") {
+            divDbStatus.style.display = 'none'
+            divDbId.style.display = 'block'
+            divDbCustomer.style.display = 'none'
+            divDbItem.style.display = 'none'
+            divDbQuantity.style.display = 'none'
+        }
+        if (action === "changeStatus") {
+            divDbStatus.style.display = 'block'
+            divDbId.style.display = 'block'
+            divDbCustomer.style.display = 'none'
+            divDbItem.style.display = 'none'
+            divDbQuantity.style.display = 'none'
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        divResponceStatus = document.getElementById("responceStatus")
+        divAnswerDb = document.getElementById("answerDb")
+        divErrorDb = document.getElementById("errorDb")
+        // divToken = document.getElementById("token")
+
+        divDbStatus = document.getElementById("dbStatus")
+        divDbId = document.getElementById("dbId")
+        divDbCustomer = document.getElementById("dbCustomer")
+        divDbItem = document.getElementById("dbItem")
+        divDbQuantity = document.getElementById("dbQuantity")
+
+        onCnangeSelect()
+
+        token = localStorage.getItem('jwt_token');
+        // if (divToken) { divToken.innerHTML = token }
+
+        // divUserId = document.getElementById("user_id")
+        // divUserId.innerHTML = "user_id:" + getUserId() + " auth status:" + isAuthorized()
+    });
+
+
+    function resetToken() {
+        token = ""
+        localStorage.setItem('jwt_token', "");
+        // if (divAnswer) { divAnswer.innerHTML = "" }
+        // if (divToken) { divToken.innerHTML = "" }
+        // if (divResponceStatus) { divResponceStatus.innerHTML = "" }
+        // if (divAnswer2) { divAnswer2.innerHTML = "" }
+        // if (divError) { divError.innerHTML = "" }
+        // if (divError2) { divError2.innerHTML = "" }
+    }
+
+
+
+
+
+</script>
+
+<style>
+    input,
+    button {
+        margin: 3px;
+        padding: 3px;
+        border-radius: 5px;
+    }
+
+    .row {
+        margin: 10px;
+    }
+
+    .center {
+        text-align: center;
+    }
+
+    .errorAnswer {
+        color: brown;
+    }
+
+    .goodAnswer {
+        color: green;
+    }
+
+    label {
+        display: inline-block;
+        width: 80px;
+    }
+
+    .token {
+        font-size: xx-small;
+        color: grey;
+    }
+</style>
